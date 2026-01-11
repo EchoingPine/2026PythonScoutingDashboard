@@ -39,13 +39,11 @@ def perform_calculations():
     gc = gspread.authorize(creds)
     spreadsheet = gc.open(googleSheet)
     mdata_worksheet = spreadsheet.worksheet("Data Entry")
-    # pdata_worksheet = spreadsheet.worksheet("Pit Scouting")
+    pdata_worksheet = spreadsheet.worksheet("Pit Scouting")
     mdata = mdata_worksheet.get_all_records()
-    # pdata = pdata_worksheet.get_all_records()
+    pdata = pdata_worksheet.get_all_records()
     df = pd.DataFrame(mdata)
-    # pdata_df = pd.DataFrame(pdata)
-
-    print(df.columns)
+    pdata_df = pd.DataFrame(pdata)
 
 
     df['Auto Score'] = df['Auto Climb'].map(auto_scores).fillna(0)
@@ -137,6 +135,6 @@ def perform_calculations():
 
     write_to_db(df, "Scouting_Data")
 
-    # write_to_db(pdata_df, "Pit Scouting")
+    write_to_db(pdata_df, "Pit Scouting")
 
 perform_calculations()
