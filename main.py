@@ -3,7 +3,6 @@ import sqlite3
 import streamlit as st
 import plotly.graph_objects as go
 import matplotlib.colors as mc
-from pyasn1.type.univ import Null
 
 import db_calc as db
 
@@ -211,11 +210,11 @@ elif dataType.lower() == "averages":
     TotalColors = ["#252525", "#003003"]
     TotalCmap = mc.LinearSegmentedColormap.from_list("GreenGray", TotalColors)
 
-    AutoCols = ['Auto Climb AVG']
+    AutoCols = ['Auto Score AVG']
     TeleopCols = ['Teleop Score AVG']
     EndgameCols = ['Climb Score AVG']
     TotalCols = ['Total Score AVG']
-    ScoringCols = ['Auto Climb AVG', 'Teleop Score AVG', 'Total Score AVG', 'Climb Score AVG']
+    ScoringCols = ['Auto Score AVG', 'Teleop Score AVG', 'Total Score AVG', 'Climb Score AVG']
 
     df = df.style.format("{:.2f}", subset=ScoringCols).background_gradient(cmap=AutoCmap, subset=AutoCols, axis=0).background_gradient(cmap=TeleopCmap, subset=TeleopCols, axis=0).background_gradient(cmap=EndgameCmap, subset=EndgameCols, axis=0).background_gradient(cmap=TotalCmap, subset=TotalCols, axis=0)
     st.dataframe(df)
