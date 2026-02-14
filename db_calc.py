@@ -99,12 +99,12 @@ def perform_calculations():
         }
     )
 
-    # calc_df = (
-    #     calc_df
-    #     .merge(auto_avg, on='Team Number')
-    #     .merge(team_counts, on='Team Number')
-    #     .merge(teleop_avg, on='Team Number')
-    # )
+    calc_df = (
+        calc_df
+        # .merge(auto_avg, on='Team Number')
+        .merge(team_counts, on='Team Number')
+        # .merge(teleop_avg, on='Team Number')
+    )
 
     eps = 1e-6
     peak = df['Total Score'].max()

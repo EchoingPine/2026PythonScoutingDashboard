@@ -65,7 +65,7 @@ def plot_team_scores(team_number, show_table=False):
             line=dict(shape='spline')
         ))
 
-    if st.session_state.showAuto:
+    if st.session_state.showAuto | dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Auto Score'],
@@ -74,7 +74,7 @@ def plot_team_scores(team_number, show_table=False):
             line=dict(shape='spline')
         ))
 
-    if st.session_state.showTeleop:
+    if st.session_state.showTeleop | dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Teleop Score'],
