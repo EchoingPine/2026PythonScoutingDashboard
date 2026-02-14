@@ -2,24 +2,7 @@ import gspread
 import pandas as pd
 import sqlite3
 from google.oauth2.service_account import Credentials
-
-googleSheet = "Test Data"
-
-endgame_scores = {
-    "L3 Climb": 30,
-    "L2 Climb": 20,
-    "L1 Climb": 10,
-    "Nothing": 0
-}
-
-auto_scores = {
-    "Yes": 15,
-    "No": 0
-}
-
-teleop_scores = {
-    "Fuel": 1,
-}
+import competition_config as config
 
 def write_to_db(dataframe, table_name):
     conn = sqlite3.connect("Scouting_Data.db")
@@ -37,7 +20,7 @@ def perform_calculations():
     )
 
     gc = gspread.authorize(creds)
-    spreadsheet = gc.open(googleSheet)
+    spreadsheet = gc.open(config.GOOGLE_SHEET)
     mdata_worksheet = spreadsheet.worksheet("Data Entry")
     pdata_worksheet = spreadsheet.worksheet("Pit Scouting")
     mdata = mdata_worksheet.get_all_records()
@@ -46,12 +29,12 @@ def perform_calculations():
     pdata_df = pd.DataFrame(pdata)
 
 
-    df['Auto Score'] = df['Auto Climb'].map(auto_scores).fillna(0)
+    df['Auto Score'] = df[config.AUTO_COLUMN].map(config.AUTO_SCORES).fillna(0)
 
-    df['Teleop Score'] = df[list(teleop_scores.keys())].fillna(0).mul(teleop_scores)
+    df['Teleop Score'] = df[list(config.TELEOP_SCORES.keys())].fillna(0).mul(config.TELEOP_SCORES)
 
 
-    df['Endgame Score'] = df['Endgame'].map(endgame_scores).fillna(0)
+    df['Endgame Score'] = df[config.ENDGAME_COLUMN].map(config.ENDGAME_SCORES).fillna(0)
     df['Total Score'] = df['Auto Score'] + df['Teleop Score'] + df['Endgame Score']
 
     df = df.sort_values(['Team Number', 'Match Number'])
@@ -87,15 +70,7 @@ def perform_calculations():
 
 
 
-    calc_df = df.groupby('Team Number', as_index=False).agg(
-        **{
-            'Auto Score AVG': ('Auto Score', 'mean'),
-            'Teleop Score AVG': ('Teleop Score', 'mean'),
-            'Climb Score AVG': ('Endgame Score', 'mean'),
-            'Total Score AVG': ('Total Score', 'mean'),
-            'Total Score STDEV': ('Total Score', 'std'),
-        }
-    )
+    calc_df = df.groupby('Team Number', as_index=False).agg(**config.CALCULATED_METRICS)
 
     calc_df = (
         calc_df
@@ -112,16 +87,14 @@ def perform_calculations():
     ).clip(lower=0.0, upper=1.0)
 
 
-    calc_df = calc_df[
-        ['Team Number', 'Auto Score AVG', 'Teleop Score AVG', 'Climb Score AVG', 'Total Score AVG', 'Total Score STDEV', 'Consistency']
-    ]
+    calc_df = calc_df[config.CALCS_COLUMN_ORDER]
 
     norm_df = pd.DataFrame()
     norm_df['Team Number'] = calc_df['Team Number']
-    norm_df['Normalized Auto'] = calc_df['Auto Score AVG'] * (100 / calc_df['Auto Score AVG'].max())
-    norm_df['Normalized Teleop'] = calc_df['Teleop Score AVG'] * (100 / calc_df['Teleop Score AVG'].max())
-    norm_df['Normalized Endgame'] = calc_df['Climb Score AVG'] * (100 / calc_df['Climb Score AVG'].max())
-    norm_df['Normalized Total'] = calc_df['Total Score AVG'] * (100 / calc_df['Total Score AVG'].max())
+    
+    # Create normalized columns based on config
+    for norm_col, source_col in config.RADAR_CHART_CONFIG['columns'].items():
+        norm_df[norm_col] = calc_df[source_col] * (100 / calc_df[source_col].max())
 
     calc_df = calc_df.round(2)
 

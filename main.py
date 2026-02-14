@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import matplotlib.colors as mc
 
 import db_calc as db
+import competition_config as config
 
 # Initialize database connection
 conn = sqlite3.connect("Scouting_Data.db")
@@ -64,7 +65,7 @@ def plot_team_scores(team_number, show_table=False):
             line=dict(shape='spline')
         ))
 
-    if st.session_state.showAuto | dataType.lower() == "single team":
+    if st.session_state.showAuto or dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Auto Score'],
@@ -73,7 +74,7 @@ def plot_team_scores(team_number, show_table=False):
             line=dict(shape='spline')
         ))
 
-    if st.session_state.showTeleop | dataType.lower() == "single team":
+    if st.session_state.showTeleop or dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Teleop Score'],
@@ -119,9 +120,9 @@ def plot_team_scores(team_number, show_table=False):
 
         pit_data = pit_data.transpose()
 
-        auto = ['Auto Climb']
-        teleop = ['Fuel']
-        endgame = ['Endgame Score', 'Team Match Number']
+        auto = config.SINGLE_TEAM_COLUMNS['auto'] + ['Team Match Number']
+        teleop = config.SINGLE_TEAM_COLUMNS['teleop'] + ['Team Match Number']
+        endgame = config.SINGLE_TEAM_COLUMNS['endgame'] + ['Team Match Number']
 
         auto_data = team_data[auto]
         auto_data.set_index("Team Match Number", inplace=True)
@@ -350,24 +351,17 @@ elif dataType.lower() == "radar chart":
     fig = go.Figure()
     bgcolors = ["#353841", "#3f414d", "#494b5a", "#494b5a", "#58596a"]
 
+    # Get column names and labels from config
+    radar_columns = list(config.RADAR_CHART_CONFIG['columns'].keys())
+    radar_labels = [config.RADAR_CHART_CONFIG['labels'][col] for col in radar_columns]
+
     for team in teamNumbers:
         if team not in df.index:
             st.warning(f"Team {team} not found in data.")
             continue
 
-        values = [
-            df.loc[team, 'Normalized Auto'],
-            df.loc[team, 'Normalized Teleop'],
-            df.loc[team, 'Normalized Endgame'],
-            df.loc[team, 'Normalized Total'],
-        ]
-
-        labels = [
-            'Auto Score',
-            'Teleop Score',
-            'Climb Score',
-            'Total Score',
-        ]
+        values = [df.loc[team, col] for col in radar_columns]
+        labels = radar_labels.copy()
 
         values.append(values[0])
         labels.append(labels[0])
