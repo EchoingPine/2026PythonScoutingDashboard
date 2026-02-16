@@ -14,6 +14,7 @@ st.session_state.showTotal = st.sidebar.checkbox(":material/score: Total", st.se
 st.session_state.showAuto = st.sidebar.checkbox(":material/clock_loader_10: Auto", st.session_state.get("showAuto", True))
 st.session_state.showTeleop = st.sidebar.checkbox(":material/clock_loader_80: Teleop", st.session_state.get("showTeleop", True))
 st.session_state.showEndgame = st.sidebar.checkbox(":material/flag: Endgame", st.session_state.get("showEndgame", True))
+st.session_state.showLegend = st.sidebar.checkbox(":material/legend_toggle: Show Legend", st.session_state.get("showLegend", True))
 
 # Collect team numbers for comparison
 teamNumbers = []

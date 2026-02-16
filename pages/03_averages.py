@@ -27,6 +27,6 @@ df = (df.style
     .background_gradient(cmap=TotalCmap, subset=config.TOTAL_AVG_COLUMNS, axis=0)
 )
 
-st.dataframe(df, use_container_width=True)
+st.dataframe(df, width="stretch")
 
 conn.close()

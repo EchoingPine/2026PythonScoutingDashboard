@@ -1,8 +1,6 @@
 [theme.dark]
-
 primaryColor = "#f47c0b"
 backgroundColor = "#190202"
 textColor = "#F4B40B"
-
-[theme.sidebar]
-backgroundColor = "#330404"
+secondaryBackgroundColor = "#330404"
+font = "times new roman"

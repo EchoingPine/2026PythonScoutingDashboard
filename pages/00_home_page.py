@@ -19,7 +19,7 @@ Use the sidebar to navigate:
 ### :material/database: Outdated Data?
 """)
 
-if st.button(":material/refresh: Refresh Values", use_container_width=True):
+if st.button(":material/refresh: Refresh Values", width="stretch"):
     with st.spinner("Refreshing..."):
         db.perform_calculations()
         st.success(":material/check: Data refreshed successfully!")

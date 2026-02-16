@@ -6,7 +6,7 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (for local development)
+# Load environment variables from .env file
 load_dotenv()
 
 VIEW_OPTIONS = ["Single Team", 

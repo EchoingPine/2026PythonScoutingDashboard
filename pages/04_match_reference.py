@@ -106,7 +106,7 @@ header = f"Match {matchNumber}"
 st.header(header)
 
 st.subheader(":material/poker_chip: Team Lineup & Averages")
-st.dataframe(result_df, use_container_width=True)
+st.dataframe(result_df, width="stretch")
 
 # Display video if available
 st.subheader(":material/youtube_activity: Video")

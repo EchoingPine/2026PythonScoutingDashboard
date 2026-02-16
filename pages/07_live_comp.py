@@ -33,7 +33,7 @@ for match in matches:
 if team_numbers:
     teams_df = pd.DataFrame(sorted(team_numbers), columns=["Team Number"])
     st.subheader("Teams in Competition")
-    st.dataframe(teams_df, use_container_width=True)
+    st.dataframe(teams_df, width="stretch")
 else:
     st.info("No team list available from Nexus yet.")
 

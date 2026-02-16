@@ -159,7 +159,7 @@ def perform_calculations():
     write_to_db(pdata_df, "Pit Scouting")
     if not tba_df.empty:
         # Serialize list/dict columns so SQLite can store them
-        tba_df = tba_df.applymap(
+        tba_df = tba_df.map(
             lambda value: json.dumps(value) if isinstance(value, (list, dict)) else value
         )
         write_to_db(tba_df, "TBA Data")

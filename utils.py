@@ -92,17 +92,19 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             line=dict(shape='spline')
         ))
 
-    # Change axis titles and layout
     fig.update_layout(
+        showlegend=st.session_state.get("showLegend"),
         legend=dict(groupclick="toggleitem"),
-        title=f"Team {team_number} Score Trend",
         xaxis_title="Match Number",
         yaxis_title="Score",
-        yaxis=dict(range=[0, 125]),
+        yaxis=dict(range=[0, 150]),
+        margin=dict(l=0, r=0, t=0, b=40),
+        font_color="#F4B40B"
     )
 
     # Display the plot
-    st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f":material/area_chart: **Team {team_number} Score Trend**")
+    st.plotly_chart(fig, width="stretch")
 
     # Show detailed breakdown tables for single team view
     if show_table:

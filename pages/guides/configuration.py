@@ -40,6 +40,17 @@ AUTO_SCORES = {
     "No": 0
 }
 ```
+This is an example of a value being mapped to a word. 
+            If there you are instead couting how many game pieces are scored and you want to multiply by its value to get the score.
+            In **`db_calc.py`**, you have to change
+```python
+df[config.AUTO_COLUMN].map(config.AUTO_SCORES).fillna(0)
+```
+to
+```python
+df[list(config.AUTO_SCORES.keys())].fillna(0).mul(config.AUTO_SCORES)
+```
+
 
 #### Teleop Scoring
 Define teleoperated scoring:
