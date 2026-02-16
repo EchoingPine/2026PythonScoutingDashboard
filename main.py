@@ -21,6 +21,9 @@ pages = {
 
 # Set up navigation
 nav = st.navigation(pages)
+
+st.logo(image="assets/inverse polarity logo magnet.png", size="large")
+
 st.set_page_config(
     page_title="Scouting Dashboard",
     page_icon=":material/analytics:",
