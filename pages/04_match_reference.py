@@ -13,7 +13,7 @@ conn = utils.get_connection()
 try:
     matchNumber = int(st.sidebar.text_input("Match Number", "1"))
 except ValueError:
-    st.error("Please enter a valid integer match number.")
+    st.error("Enter a valid match number")
     st.stop()
 
 # Fetch match lineup and videos from TBA data
@@ -25,7 +25,7 @@ test_df = pd.read_sql(
 )
 
 if test_df.empty:
-    st.error("Please enter a valid match number.")
+    st.error("Enter a valid match number")
     st.stop()
 
 row = test_df.iloc[0]
@@ -80,9 +80,9 @@ if teams_df.empty:
 
 # Get average scores for all teams
 avg_columns = ["Team Number"] + config.SCORING_AVG_COLUMNS
-quoted_columns = ", ".join([f'"{col}"' for col in avg_columns])
+something = ", ".join([f'"{col}"' for col in avg_columns])
 avg_scores_df = pd.read_sql(
-    f'SELECT {quoted_columns} FROM "Calcs"',
+    f'SELECT {something} FROM "Calcs"',
     conn
 )
 
@@ -113,15 +113,9 @@ st.subheader(":material/youtube_activity: Video")
 videos = parse_videos(row.get("videos", []))
 if videos:
     for video in videos:
-        if video.get("type") == "youtube":
-            video_id = video.get("key")
-            if video_id:
-                st.video(f"https://www.youtube.com/watch?v={video_id}")
-        elif video.get("type") == "twitch":
-            video_url = video.get("key")
-            if video_url:
-                st.write(f"[Watch on Twitch]({video_url})")
+        video_id = video.get("key")
+        st.video(f"https://www.youtube.com/watch?v={video_id}")
 else:
-    st.info("No video available for this match yet.")
+    st.info("No video available for this match")
 
 conn.close()

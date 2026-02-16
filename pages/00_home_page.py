@@ -21,8 +21,5 @@ Use the sidebar to navigate:
 
 if st.button(":material/refresh: Refresh Values", use_container_width=True):
     with st.spinner("Refreshing..."):
-        try:
-            db.perform_calculations()
-            st.success(":material/check: Data refreshed successfully!")
-        except Exception as e:
-            st.error(f":material/error: Error refreshing data: {e}")
+        db.perform_calculations()
+        st.success(":material/check: Data refreshed successfully!")

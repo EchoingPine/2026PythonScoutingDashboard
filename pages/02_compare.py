@@ -24,7 +24,7 @@ for i in range(1, 7):
             teamNumber = int(input_value)
             teamNumbers.append(teamNumber)
         except ValueError:
-            st.error(f"Please enter a valid number for Team {i}.")
+            st.error(f"Enter a valid number for Team {i}.")
             st.stop()
 
 # Display teams in 3-column layout
