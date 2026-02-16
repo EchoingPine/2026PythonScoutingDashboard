@@ -2,6 +2,9 @@
 # STREAMLIT CONFIGURATIONS
 # ============================================================================
 
+import streamlit as st
+import os
+
 VIEW_OPTIONS = ["Single Team", 
                 "Compare", 
                 "Averages", 
@@ -17,12 +20,20 @@ VIEW_OPTIONS = ["Single Team",
 # Google Sheet name
 GOOGLE_SHEET = "Test Data"
 
-# TBA api key
-TBA_API_KEY = "5PtsI1hKqArV9N60b7Cmi55ieDLY9Q2uDUgmrMEUO1ztyJjGKHPKHCkKNbKH3jVO"
+# TBA API key - use secrets for security
+try:
+    TBA_API_KEY = st.secrets.get("TBA_API_KEY", os.environ.get("TBA_API_KEY", ""))
+except:
+    TBA_API_KEY = os.environ.get("TBA_API_KEY", "")
+
 EVENT_KEY = "2025necmp2"
 
-# Nexus API key
-NEXUS_API_KEY = "K34oifCF-N-NQKTxeIMrL2R3LyQ"
+# Nexus API key - use secrets for security
+try:
+    NEXUS_API_KEY = st.secrets.get("NEXUS_API_KEY", os.environ.get("NEXUS_API_KEY", ""))
+except:
+    NEXUS_API_KEY = os.environ.get("NEXUS_API_KEY", "")
+
 NEXUS_URL = "https://frc.nexus/api/v1/event/" + EVENT_KEY
 NEXUS_HEADERS = {"Nexus-Api-Key": NEXUS_API_KEY}
 

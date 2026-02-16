@@ -7,7 +7,10 @@ venv/
 
 *.db
 
+# Secrets and credentials
 data_reader_account.json
+.env
+.env.local
 
 .idea/
 *.iml
