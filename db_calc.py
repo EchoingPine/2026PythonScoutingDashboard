@@ -5,6 +5,8 @@ import sqlite3
 import requests
 from google.oauth2.service_account import Credentials
 import competition_config as config
+import streamlit as st
+import os
 
 # Write a dataframe to SQLite database
 def write_to_db(dataframe, table_name):
@@ -29,11 +31,19 @@ def perform_calculations():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-    # Authenticate using service account key file
-    creds = Credentials.from_service_account_file(
-        "data_reader_account.json",
-        scopes=apis
-    )
+    
+    # Authenticate using service account credentials
+    # Try Streamlit secrets first (for cloud deployment), then fall back to local file
+    try:
+        # Use Streamlit secrets (for Streamlit Cloud)
+        service_account_info = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(service_account_info, scopes=apis)
+    except (FileNotFoundError, KeyError):
+        # Fall back to local file (for local development)
+        creds = Credentials.from_service_account_file(
+            "data_reader_account.json",
+            scopes=apis
+        )
 
     # Connect to Google Sheets
     gc = gspread.authorize(creds)
