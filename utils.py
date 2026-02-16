@@ -116,6 +116,9 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
         team_data.drop(columns='Scouter Initials', inplace=True, errors='ignore')
         team_data.drop(columns='Team Number', inplace=True, errors='ignore')
 
+        pit_data.drop(columns='Names', inplace=True, errors='ignore')
+        pit_data.drop(columns='Team #', inplace=True, errors='ignore')
+
         # Transpose pit data for display
         pit_data = pit_data.transpose()
 
