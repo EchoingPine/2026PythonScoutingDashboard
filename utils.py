@@ -61,7 +61,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             y=team_data['Total Score'],
             mode='lines+markers',
             name='Total Score',
-            line=dict(shape='spline')
+            line=dict(shape='spline', color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 1']),
+            marker=dict(color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 1'])
         ))
 
     # Always show auto/teleop in single team view
@@ -71,7 +72,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             y=team_data['Auto Score'],
             mode='lines+markers',
             name='Auto Score',
-            line=dict(shape='spline')
+            line=dict(shape='spline', color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 2']),
+            marker=dict(color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 2'])
         ))
 
     if st.session_state.get("showTeleop") or dataType.lower() == "single team":
@@ -80,7 +82,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             y=team_data['Teleop Score'],
             mode='lines+markers',
             name='Teleop Score',
-            line=dict(shape='spline')
+            line=dict(shape='spline', color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 3']),
+            marker=dict(color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 3'])
         ))
 
     if st.session_state.get("showEndgame"):
@@ -89,7 +92,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             y=team_data['Endgame Score'],
             mode='lines+markers',
             name='Endgame Score',
-            line=dict(shape='spline')
+            line=dict(shape='spline', color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 4']),
+            marker=dict(color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 4'])
         ))
 
     fig.update_layout(
@@ -120,6 +124,7 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
 
         pit_data.drop(columns='Name(s)', inplace=True, errors='ignore')
         pit_data.drop(columns='Team #', inplace=True, errors='ignore')
+        pit_data.drop(columns='competition_id', inplace=True, errors='ignore')
 
         # Transpose pit data for display
         pit_data = pit_data.transpose()

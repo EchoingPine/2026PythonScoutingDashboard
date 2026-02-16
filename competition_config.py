@@ -118,6 +118,17 @@ TELEOP_COLORS = ["#252525", "#301500"]
 ENDGAME_COLORS = ["#252525", "#302d00"]
 TOTAL_COLORS = ["#252525", "#003003"]
 
+# Alternative pastel set (if you prefer softer colors):
+GRAPH_LINE_COLORS_PASTEL = {
+    'Line Color 1': '#F4B40B',
+    'Line Color 2': '#FF6B35',
+    'Line Color 3': '#FF006E',
+    'Line Color 4': '#00CED1',
+}
+
+BACKGROUND_COLOR = "#190202"
+TEXT_COLOR = "#F4B40B"
+
 # ============================================================================
 # COLUMNS FOR RADAR CHART
 # ============================================================================

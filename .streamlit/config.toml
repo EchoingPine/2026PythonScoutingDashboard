@@ -1,6 +1,7 @@
 [theme.dark]
-primaryColor = "#f47c0b"
+primaryColor = "#136F63"
 backgroundColor = "#190202"
 textColor = "#F4B40B"
 secondaryBackgroundColor = "#330404"
+borderColor = "#D1603D"
 font = "times new roman"

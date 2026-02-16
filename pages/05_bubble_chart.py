@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import utils
+import competition_config as config
 
 st.set_page_config(layout="wide")
 st.title(":material/bubble_chart: Bubble Chart")
@@ -27,7 +28,7 @@ else:
             x=df[xAxis],
             y=df[yAxis],
             mode='markers+text',
-            marker=dict(size=12),
+            marker=dict(size=12, color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 4']),
             text=df['Team Number'],
             textposition='bottom center',
             textfont=dict(size=14, color='white'),

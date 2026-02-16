@@ -32,12 +32,14 @@ radar_columns = list(config.RADAR_CHART_CONFIG['columns'].keys())
 radar_labels = [config.RADAR_CHART_CONFIG['labels'][col] for col in radar_columns]
 
 # Add trace for each selected team
+i = 0
 for team in teamNumbers:
     if team not in df.index:
         st.warning(f"Team {team} not found in data.")
         continue
 
     # Get normalized values for this team
+    i+=1
     values = [df.loc[team, col] for col in radar_columns]
     labels = radar_labels.copy()
 
@@ -52,11 +54,11 @@ for team in teamNumbers:
         fill='toself',
         name=f"Team {team}",
         mode='lines',
-        line=dict(shape="spline")
+        line=dict(shape="spline", color=config.GRAPH_LINE_COLORS_PASTEL[f"Line Color {i}"])
     ))
 
 # Style radar chart traces and layout
-fig.update_traces(opacity=0.5)
+fig.update_traces(opacity=0.3)
 
 fig.update_polars(angularaxis_dtick='')
 fig.update_polars(
@@ -67,9 +69,9 @@ fig.update_polars(
 
 # Apply styling
 fig.update_layout(
-    plot_bgcolor="#0e1117",
+    plot_bgcolor=config.BACKGROUND_COLOR,
     polar=dict(
-        bgcolor="#0e1117",
+        bgcolor=config.BACKGROUND_COLOR,
         radialaxis=dict(
             gridcolor="rgba(255,255,255,0.15)",
             tickfont=dict(color="white"),
