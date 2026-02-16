@@ -1,9 +1,30 @@
 # ============================================================================
+# STREAMLIT CONFIGURATIONS
+# ============================================================================
+
+VIEW_OPTIONS = ["Single Team", 
+                "Compare", 
+                "Averages", 
+                "Match Reference", 
+                "Bubble Chart", 
+                "Radar Chart",
+                "Live Comp"]
+
+# ============================================================================
 # COMPETITION SETTINGS
 # ============================================================================
 
 # Google Sheet name
 GOOGLE_SHEET = "Test Data"
+
+# TBA api key
+TBA_API_KEY = "5PtsI1hKqArV9N60b7Cmi55ieDLY9Q2uDUgmrMEUO1ztyJjGKHPKHCkKNbKH3jVO"
+EVENT_KEY = "2025necmp2"
+
+# Nexus API key
+NEXUS_API_KEY = "K34oifCF-N-NQKTxeIMrL2R3LyQ"
+NEXUS_URL = "https://frc.nexus/api/v1/event/" + EVENT_KEY
+NEXUS_HEADERS = {"Nexus-Api-Key": NEXUS_API_KEY}
 
 # ============================================================================
 # SCORING RULES
@@ -69,8 +90,21 @@ CALCS_COLUMN_ORDER = [
     'Consistency'
 ]
 
+# Columns to apply background gradient coloring for each scoring phase
+AUTO_AVG_COLUMNS = ['Auto Score AVG']
+TELEOP_AVG_COLUMNS = ['Teleop Score AVG']
+ENDGAME_AVG_COLUMNS = ['Climb Score AVG']
+TOTAL_AVG_COLUMNS = ['Total Score AVG', 'Total Score STDEV', 'Consistency']
+SCORING_AVG_COLUMNS = ['Auto Score AVG', 'Teleop Score AVG', 'Climb Score AVG', 'Total Score AVG', 'Total Score STDEV', 'Consistency']
+
+# Color schemes for background gradients in the Averages section
+AUTO_COLORS = ["#252525", "#010014"]
+TELEOP_COLORS = ["#252525", "#301500"]
+ENDGAME_COLORS = ["#252525", "#302d00"]
+TOTAL_COLORS = ["#252525", "#003003"]
+
 # ============================================================================
-# NORMALIZATION COLUMNS FOR RADAR CHART
+# COLUMNS FOR RADAR CHART
 # ============================================================================
 
 RADAR_CHART_CONFIG = {

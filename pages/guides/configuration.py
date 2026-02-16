@@ -1,10 +1,11 @@
-# Competition Configuration Guide
+import streamlit as st
 
-This guide explains how to easily configure your scouting dashboard for different competitions.
+st.markdown("""
+# Configuration Guide
 
 ## Quick Start
 
-All competition-specific settings are now centralized in **`competition_config.py`**. To set up for a new competition, simply edit this file.
+All competition-specific settings are in **`competition_config.py`**. Edit this file to set up for a new competition.
 
 ## Configuration Sections
 
@@ -19,7 +20,7 @@ Change this to match your Google Sheet name for the competition.
 ### 2. Scoring Rules
 
 #### Endgame Scoring
-Define the point values for different endgame actions:
+Define the point values for different actions:
 
 ```python
 ENDGAME_SCORES = {
@@ -31,7 +32,7 @@ ENDGAME_SCORES = {
 ```
 
 #### Auto Scoring
-Define autonomous period scoring:
+Define autonomous scoring:
 
 ```python
 AUTO_SCORES = {
@@ -41,12 +42,11 @@ AUTO_SCORES = {
 ```
 
 #### Teleop Scoring
-Define teleoperated period scoring (column name : points per action):
+Define teleoperated scoring:
 
 ```python
 TELEOP_SCORES = {
-    "Fuel": 1,
-    "Cargo": 2,  # Add more scoring elements
+    "Fuel": 1  # Add more scoring elements
 }
 ```
 
@@ -56,8 +56,8 @@ Specify which columns appear in different views:
 
 ```python
 SINGLE_TEAM_COLUMNS = {
-    "auto": ['Auto Climb', 'Auto Pieces'],  # Columns for auto phase
-    "teleop": ['Fuel', 'Cargo'],            # Columns for teleop phase
+    "auto": ['Auto Climb'],  # Columns for auto phase
+    "teleop": ['Fuel'],            # Columns for teleop phase
     "endgame": ['Endgame Score']            # Columns for endgame phase
 }
 ```
@@ -71,7 +71,7 @@ AUTO_COLUMN = "Auto Climb"      # Column name in your data sheet
 
 ### 4. Calculated Metrics
 
-Define which statistics to calculate for each team:
+Define which stats are calculated for each team:
 
 ```python
 CALCULATED_METRICS = {
@@ -83,9 +83,9 @@ CALCULATED_METRICS = {
 }
 ```
 
-### 5. Radar Chart Configuration
+### 5. Radar Chart
 
-Configure what appears in the radar chart comparison:
+Define what appears in the radar chart:
 
 ```python
 RADAR_CHART_CONFIG = {
@@ -152,17 +152,8 @@ AUTO_COLUMN = "Auto Leave"
 2. In the dashboard, click "Refresh Values" in the sidebar
 3. All calculations and displays will update automatically
 
-## Tips
+## Make sure
 
-- **Column Names Must Match**: Ensure column names in the config match exactly with your Google Sheet column headers
-- **Test First**: After updating config, check a single team view to verify calculations are correct
-- **Backup Config**: Keep a copy of working configurations for different competitions
+- **Column Names**: Make sure column names in the config match exactly with your Google Sheet column headers
 - **Point Values**: Make sure point values match the official game manual
-
-## Need Help?
-
-If you see errors after updating the config:
-1. Check that all column names match your Google Sheet exactly
-2. Verify point values are numbers (not strings)
-3. Make sure required columns exist in your data
-4. Click "Refresh Values" after any config changes
+""")
