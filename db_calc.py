@@ -11,51 +11,19 @@ import os
 # Write a dataframe to SQLite database
 def write_to_db(dataframe, table_name):
     conn = sqlite3.connect("Scouting_Data.db")
-    cursor = conn.cursor()
     
-    # Lookup tables that should always be replaced, not appended
-    lookup_tables = ["TBA Data"]
-    
-    if table_name in lookup_tables:
-        # Replace entire table to avoid schema conflicts
-        dataframe.to_sql(table_name, conn, if_exists="replace", index=False)
-    elif 'Event Key' in dataframe.columns:
-        # Tables with Event Key - handle per-event updates (append/replace per competition)
+    if 'Event Key' in dataframe.columns:
+        dataframe = dataframe.drop_duplicates()
+        
         try:
-            events = pd.read_sql(f"SELECT DISTINCT `Event Key` FROM {table_name}", conn)
-            event_exists = dataframe['Event Key'].iloc[0] in events['Event Key'].values
-        except:
-            # Table doesn't exist yet, so this is a new competition
-            event_exists = False
-        
-        if event_exists:
-            # Delete old data for this event and append new
-            cursor.execute(f"DELETE FROM {table_name} WHERE `Event Key` = ?", (dataframe['Event Key'].iloc[0],))
-            conn.commit()
-        
-        # Check if table exists and handle schema
-        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
-        table_exists = cursor.fetchone() is not None
-        
-        if table_exists:
-            # Get existing columns
-            cursor.execute(f"PRAGMA table_info(`{table_name}`)")
-            existing_cols = {row[1] for row in cursor.fetchall()}
-            new_cols = set(dataframe.columns)
-            
-            # Add missing columns
-            missing_cols = new_cols - existing_cols
-            for col in missing_cols:
-                col_type = "TEXT"  # Default to TEXT for simplicity
-                cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{col}` {col_type}")
-            conn.commit()
-        
-        # Now append data
-        dataframe.to_sql(table_name, conn, if_exists="append", index=False)
-    else:
-        # Default: replace
-        dataframe.to_sql(table_name, conn, if_exists="replace", index=False)
+            conn.execute(
+                f'DELETE FROM "{table_name}" WHERE "Event Key" = ?',
+                (dataframe['Event Key'].iloc[0],)
+            )
+        except Exception as e:
+            print(f"Warning {table_name}: {e}")
     
+    dataframe.to_sql(table_name, conn, if_exists='append', index=False)
     conn.close()
 
 # Main calculation and data processing function
@@ -173,39 +141,53 @@ def perform_calculations():
         # ========================================================================
 
         # Create normalized dataframe on a 0-100 scale for radar chart visualization
-        norm_df = pd.DataFrame()
-        norm_df['Team Number'] = calc_df['Team Number']
+        norm_data = {'Team Number': calc_df['Team Number']}
         
         # Normalize each metric to 0-100 scale based on max value
         for norm_col, source_col in config.RADAR_CHART_CONFIG['columns'].items():
-            norm_df[norm_col] = calc_df[source_col] * (100 / calc_df[source_col].max())
+            norm_data[norm_col] = calc_df[source_col] * (100 / calc_df[source_col].max())
+        
+        norm_df = pd.DataFrame(norm_data)
 
         # Round calculated metrics to 2 decimal places
         calc_df = calc_df.round(2)
 
-        norm_df['Event Key'] = config.EVENTS[competition]['Event Key']
-        norm_df['Event Name'] = config.EVENTS[competition]['Name']
-        calc_df['Event Key'] = config.EVENTS[competition]['Event Key']
-        calc_df['Event Name'] = config.EVENTS[competition]['Name']
-        df['Event Key'] = config.EVENTS[competition]['Event Key']
-        df['Event Name'] = config.EVENTS[competition]['Name']
-        pdata_df['Event Key'] = config.EVENTS[competition]['Event Key']
-        pdata_df['Event Name'] = config.EVENTS[competition]['Name']
+        # Add Event Key and Event Name to all dataframes efficiently
+        event_key = config.EVENTS[competition]['Event Key']
+        event_name = config.EVENTS[competition]['Name']
+        
+        norm_df['Event Key'] = event_key
+        norm_df['Event Name'] = event_name
+        calc_df['Event Key'] = event_key
+        calc_df['Event Name'] = event_name
+        df['Event Key'] = event_key
+        df['Event Name'] = event_name
+        pdata_df['Event Key'] = event_key
+        pdata_df['Event Name'] = event_name
 
         # ========================================================================
         # DATABASE STORAGE
         # ========================================================================
 
-        # Write all  data to SQLite database
+        # Write all data to SQLite database
         write_to_db(norm_df, "Normalized Data")
         write_to_db(calc_df, "Calcs")
         write_to_db(df, "Scouting_Data")
         write_to_db(pdata_df, "Pit Scouting")
         if not tba_df.empty:
+            # Drop duplicate rows BEFORE serialization (using key column to identify unique matches)
+            # TBA API typically has 'key' column that uniquely identifies each match
+            if 'key' in tba_df.columns:
+                tba_df = tba_df.drop_duplicates(subset=['key'])
+            else:
+                tba_df = tba_df.drop_duplicates()
+            
             # Serialize list/dict columns so SQLite can store them
             tba_df = tba_df.map(
                 lambda value: json.dumps(value) if isinstance(value, (list, dict)) else value
             )
+            # Add Event Key and Event Name to TBA data
+            tba_df = tba_df.assign(**{'Event Key': event_key, 'Event Name': event_name})
             write_to_db(tba_df, "TBA Data")
         else:
             print("Warning: No TBA data to write.")

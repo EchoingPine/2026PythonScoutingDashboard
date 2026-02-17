@@ -9,7 +9,7 @@ utils.init_session_state()
 
 # Sidebar team number input
 try:
-    team_input = st.sidebar.text_input("Team Number", "1100", key="single_team_number")
+    team_input = st.sidebar.text_input(":material/numbers: Team Number", "1100", key="single_team_number")
     teamNumber = int(team_input)
 except ValueError:
     st.error("Please enter a valid integer team number.")

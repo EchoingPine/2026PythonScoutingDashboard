@@ -19,9 +19,9 @@ except ValueError:
 # Fetch match lineup and videos from TBA data
 test_df = pd.read_sql(
     'SELECT "alliances.blue.team_keys" AS blue_keys, "alliances.red.team_keys" AS red_keys, "videos" '
-    'FROM "TBA Data" WHERE "match_number" = ? AND "comp_level" = "qm"',
+    'FROM "TBA Data" WHERE "match_number" = ? AND "comp_level" = "qm" AND "Event Name" = ?',
     conn,
-    params=(matchNumber,)
+    params=(matchNumber, st.session_state.comp)
 )
 
 if test_df.empty:
@@ -82,8 +82,9 @@ if teams_df.empty:
 avg_columns = ["Team Number"] + config.SCORING_AVG_COLUMNS
 something = ", ".join([f'"{col}"' for col in avg_columns])
 avg_scores_df = pd.read_sql(
-    f'SELECT {something} FROM "Calcs"',
-    conn
+    f'SELECT {something} FROM "Calcs" WHERE "Event Name" = ?',
+    conn,
+    params=(st.session_state.comp,)
 )
 
 # Merge match lineup with average scores

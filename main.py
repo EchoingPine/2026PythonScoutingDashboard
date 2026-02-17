@@ -36,5 +36,5 @@ st.set_page_config(
 if 'comp' not in st.session_state:
     st.session_state.comp = list(config.EVENTS.values())[0]["Name"]
 
-st.session_state.comp = st.sidebar.selectbox("Competition", [config.EVENTS[key]["Name"] for key in config.EVENTS], key="competition_select")
+st.session_state.comp = st.sidebar.selectbox("**:material/event: Competition**", [config.EVENTS[key]["Name"] for key in config.EVENTS], key="competition_select")
 nav.run()

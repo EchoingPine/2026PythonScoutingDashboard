@@ -10,7 +10,7 @@ st.title(":material/bubble_chart: Bubble Chart")
 conn = utils.get_connection()
 
 # Load all calculated metrics
-df = pd.read_sql(f'SELECT * FROM "Calcs " WHERE `Event Name` = "{st.session_state.comp}"', conn)
+df = pd.read_sql(f'SELECT * FROM "Calcs" WHERE `Event Name` = "{st.session_state.comp}"', conn)
 
 # Selectboxes for choosing X and Y axes from available columns
 xAxis = st.sidebar.selectbox(":material/line_axis: X-Axis", ['Select X-Axis'] + df.columns.tolist(), key="bubble_x_axis")

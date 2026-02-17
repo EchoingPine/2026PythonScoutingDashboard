@@ -12,7 +12,7 @@ conn = utils.get_connection()
 # Collect team numbers for radar comparison
 teamNumbers = []
 for i in range(1, 7):
-    input_value = st.sidebar.text_input(f"Team {i}", "", key=f"radar_team_{i}")
+    input_value = st.sidebar.text_input(f":material/numbers: Team {i}", "", key=f"radar_team_{i}")
     if input_value.strip():
         try:
             teamNumber = int(input_value)
