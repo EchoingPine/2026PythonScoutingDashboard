@@ -115,54 +115,6 @@ RADAR_CHART_CONFIG = {
 }
 ```
 
-## Example: Switching to a New Competition
-
-Let's say the new competition has:
-- Different scoring zones (Speaker, Amp, Trap)
-- Two-level climb (High, Low)
-- Different auto actions
-
-### Step 1: Update Scoring Rules
-
-```python
-ENDGAME_SCORES = {
-    "High Climb": 25,
-    "Low Climb": 10,
-    "Park": 5,
-    "Nothing": 0
-}
-
-AUTO_SCORES = {
-    "Left Zone": 5,
-    "No": 0
-}
-
-TELEOP_SCORES = {
-    "Speaker": 2,
-    "Amp": 1,
-    "Trap": 5,
-}
-```
-
-### Step 2: Update Column Names
-
-```python
-SINGLE_TEAM_COLUMNS = {
-    "auto": ['Auto Leave', 'Auto Speaker'],
-    "teleop": ['Speaker', 'Amp', 'Trap'],
-    "endgame": ['Endgame Score', 'Climb Type']
-}
-
-ENDGAME_COLUMN = "Climb Type"
-AUTO_COLUMN = "Auto Leave"
-```
-
-### Step 3: Save and Refresh
-
-1. Save `competition_config.py`
-2. In the dashboard, click "Refresh Values" in the sidebar
-3. All calculations and displays will update automatically
-
 ## Make sure
 
 - **Column Names**: Make sure column names in the config match exactly with your Google Sheet column headers

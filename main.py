@@ -1,5 +1,6 @@
 import streamlit as st
 import db_calc as db
+import competition_config as config
 
 
 # Define navigation pages
@@ -30,4 +31,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+if 'comp' not in st.session_state:
+    st.session_state.comp = list(config.EVENTS.values())[0]["Name"]
+
+st.session_state.comp = st.sidebar.selectbox("Competition", [config.EVENTS[key]["Name"] for key in config.EVENTS], key="competition_select")
 nav.run()

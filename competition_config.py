@@ -21,6 +21,20 @@ VIEW_OPTIONS = ["Single Team",
 # COMPETITION SETTINGS
 # ============================================================================
 
+
+EVENTS = {
+    '2025necmp2': {
+        "Name": "2025 New England Championship",
+        "Event Key": "2025necmp2",
+        "Google Sheet": "Test Data"
+    },
+    '2025mawor': {
+        "Name": "2025 WPI Regional",
+        "Event Key": "2025mawor",
+        "Google Sheet": "WPI Test Data"
+    }
+}
+
 # Google Sheet name
 GOOGLE_SHEET = "Test Data"
 

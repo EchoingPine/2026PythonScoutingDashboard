@@ -12,7 +12,7 @@ conn = utils.get_connection()
 # Collect team numbers for radar comparison
 teamNumbers = []
 for i in range(1, 7):
-    input_value = st.sidebar.text_input(f"Team {i}", "")
+    input_value = st.sidebar.text_input(f"Team {i}", "", key=f"radar_team_{i}")
     if input_value.strip():
         try:
             teamNumber = int(input_value)
@@ -22,7 +22,7 @@ for i in range(1, 7):
             st.stop()
 
 # Get normalized team data (0-100 scale)
-df = pd.read_sql(f'SELECT * FROM "Normalized Data"', conn)
+df = pd.read_sql(f'SELECT * FROM "Normalized Data" WHERE `Event Name` = "{st.session_state.comp}"', conn)
 df.set_index("Team Number", inplace=True)
 
 fig = go.Figure()
@@ -89,6 +89,6 @@ fig.update_layout(
     showlegend=True,
 )
 
-st.plotly_chart(fig, width="stretch")
+st.plotly_chart(fig)
 
 conn.close()

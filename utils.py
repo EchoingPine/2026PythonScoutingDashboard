@@ -5,12 +5,10 @@ import competition_config as config
 
 # Initialize database connection
 def get_connection():
-    """Get SQLite database connection."""
     return sqlite3.connect("Scouting_Data.db")
 
 # Apply row styling based on alliance color (red/blue)
 def color_alliance(row):
-    """Style dataframe rows with alliance color background."""
     if row["Position"].startswith("RED"):
         return ["background-color: rgba(255, 0, 0, 0.15)"] * len(row)
     elif row["Position"].startswith("BLUE"):
@@ -19,12 +17,6 @@ def color_alliance(row):
 
 # Retrieve specific data type from database for a given team/match
 def retrieve_data(data_type, team_number, match_number=None):
-    """Query scouting data from database.
-    Args:
-        data_type: Column name to retrieve
-        team_number: Team's number
-        match_number: Optional match number filter
-    """
     conn = get_connection()
     cursor = conn.cursor()
     if match_number is None:
@@ -40,11 +32,10 @@ def retrieve_data(data_type, team_number, match_number=None):
 
 # Generate score trend visualization and optional detailed tables for a team
 def plot_team_scores(team_number, show_table=False, dataType=""):
-    """Plot team performance across matches with optional detailed breakdown tables."""
     conn = get_connection()
     # Fetch all matches for the team, ordered chronologically
     team_data = sql_to_df(
-        f"SELECT * FROM Scouting_Data WHERE `Team Number` = {team_number} ORDER BY `Team Match Number` ASC",
+        f"SELECT * FROM Scouting_Data WHERE `Team Number` = {team_number} AND `Event Name` = '{st.session_state.comp}' ORDER BY `Team Match Number` ASC",
         conn
     )
     if team_data.empty:
@@ -55,7 +46,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
     fig = go.Figure()
 
     # Add traces for selected score types based on session state
-    if st.session_state.get("showTotal"):
+    # Always show all scores in single team view
+    if st.session_state.get("showTotal") or dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Total Score'],
@@ -86,7 +78,7 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
             marker=dict(color=config.GRAPH_LINE_COLORS_PASTEL['Line Color 3'])
         ))
 
-    if st.session_state.get("showEndgame"):
+    if st.session_state.get("showEndgame") or dataType.lower() == "single team":
         fig.add_trace(go.Scatter(
             x=team_data['Team Match Number'],
             y=team_data['Endgame Score'],
@@ -102,19 +94,30 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
         xaxis_title="Match Number",
         yaxis_title="Score",
         yaxis=dict(range=[0, 150]),
-        margin=dict(l=0, r=0, t=0, b=40),
+        margin=dict(l=0, r=0, t=25, b=0),
         font_color="#F4B40B"
     )
+    
+    if dataType.lower() == "single team":
+        configs={'modeBarButtonsToAdd': ['drawline',
+                                        'drawopenpath',
+                                        'drawclosedpath',
+                                        'drawcircle',
+                                        'drawrect',
+                                        'eraseshape'
+                                        ]}
+    else:
+        configs={}
 
     # Display the plot
     st.markdown(f":material/area_chart: **Team {team_number} Score Trend**")
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, config=configs)
 
     # Show detailed breakdown tables for single team view
     if show_table:
         # Fetch pit scouting data
         pit_data = sql_to_df(
-            f'SELECT * FROM "Pit Scouting" WHERE "Team #" = {team_number}',
+            f'SELECT * FROM "Pit Scouting" WHERE "Team #" = {team_number} AND `Event Name` = "{st.session_state.comp}"',
             conn
         )
 
@@ -171,12 +174,10 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
     conn.close()
 
 def sql_to_df(query, conn):
-    """Convert SQL query result to pandas DataFrame."""
     import pandas as pd
     return pd.read_sql(query, conn)
 
 def init_session_state():
-    """Initialize default session state."""
     default_states = {
         "showTotal": True,
         "showAuto": True,

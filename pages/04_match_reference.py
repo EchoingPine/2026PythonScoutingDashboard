@@ -11,7 +11,7 @@ conn = utils.get_connection()
 
 # Get match number input
 try:
-    matchNumber = int(st.sidebar.text_input("Match Number", "1"))
+    matchNumber = int(st.sidebar.text_input("Match Number", "1", key="match_reference_number"))
 except ValueError:
     st.error("Enter a valid match number")
     st.stop()

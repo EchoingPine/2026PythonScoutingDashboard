@@ -10,13 +10,21 @@ st.title(":material/bubble_chart: Bubble Chart")
 conn = utils.get_connection()
 
 # Load all calculated metrics
-df = pd.read_sql('SELECT * FROM "Calcs"', conn)
+df = pd.read_sql(f'SELECT * FROM "Calcs " WHERE `Event Name` = "{st.session_state.comp}"', conn)
 
 # Selectboxes for choosing X and Y axes from available columns
-xAxis = st.sidebar.selectbox(":material/line_axis: X-Axis", ['Select X-Axis'] + df.columns.tolist())
-yAxis = st.sidebar.selectbox(":material/line_axis: Y-Axis", ['Select Y-Axis'] + df.columns.tolist())
+xAxis = st.sidebar.selectbox(":material/line_axis: X-Axis", ['Select X-Axis'] + df.columns.tolist(), key="bubble_x_axis")
+yAxis = st.sidebar.selectbox(":material/line_axis: Y-Axis", ['Select Y-Axis'] + df.columns.tolist(), key="bubble_y_axis")
 
 fig = go.Figure()
+
+configs={'modeBarButtonsToAdd': ['drawline',
+                                'drawopenpath',
+                                'drawclosedpath',
+                                'drawcircle',
+                                'drawrect',
+                                'eraseshape'
+                                ]}
 
 # Show info message until both axes are selected
 if xAxis == 'Select X-Axis' or yAxis == 'Select Y-Axis':
@@ -46,6 +54,6 @@ else:
         yaxis_title=yAxis,
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, config=configs)
 
 conn.close()

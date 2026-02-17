@@ -7,7 +7,7 @@ st.markdown("""
 Use the sidebar to navigate:
 
 - :material/person: **Single Team** - View metrics for a single team
-- :material/compare: **Compare** - View and compare up to 6 teams side-by-side
+- :material/compare: **Compare** - View graphs for up to 6 teams side-by-side
 - :material/table: **Team Averages** - View team averages across all matches
 - :material/scoreboard: **Match Reference** - View specific match details and videos
 - :material/bubble_chart: **Bubble Chart** - View trends and correlations between metrics

@@ -10,7 +10,7 @@ st.title(":material/table: Averages")
 conn = utils.get_connection()
 
 # Load calculated averages for all teams
-df = pd.read_sql("SELECT * FROM Calcs", conn)
+df = pd.read_sql(f"SELECT * FROM Calcs WHERE `Event Name` = '{st.session_state.comp}'", conn)
 
 # Create color gradients for different scoring phases
 AutoCmap = mc.LinearSegmentedColormap.from_list("BlueGray", config.AUTO_COLORS)

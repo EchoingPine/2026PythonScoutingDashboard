@@ -8,9 +8,9 @@ st.title(":material/person_search: Single Team")
 utils.init_session_state()
 
 # Sidebar team number input
-teamNumber = None
 try:
-    teamNumber = int(st.sidebar.text_input("Team Number", "1100"))
+    team_input = st.sidebar.text_input("Team Number", "1100", key="single_team_number")
+    teamNumber = int(team_input)
 except ValueError:
     st.error("Please enter a valid integer team number.")
     st.stop()
