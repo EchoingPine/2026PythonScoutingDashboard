@@ -17,6 +17,9 @@ AutoCmap = mc.LinearSegmentedColormap.from_list("BlueGray", config.AUTO_COLORS)
 TeleopCmap = mc.LinearSegmentedColormap.from_list("OrangeGray", config.TELEOP_COLORS)
 EndgameCmap = mc.LinearSegmentedColormap.from_list("YellowGray", config.ENDGAME_COLORS)
 TotalCmap = mc.LinearSegmentedColormap.from_list("GreenGray", config.TOTAL_COLORS)
+RAWCmap = mc.LinearSegmentedColormap.from_list("PurpleGray", config.RAW_COLORS)
+
+df.drop(columns=['Event Key'], inplace=True, errors='ignore')
 
 # Apply styling with color gradients for each scoring phase
 df = (df.style
@@ -25,6 +28,7 @@ df = (df.style
     .background_gradient(cmap=TeleopCmap, subset=config.TELEOP_AVG_COLUMNS, axis=0)
     .background_gradient(cmap=EndgameCmap, subset=config.ENDGAME_AVG_COLUMNS, axis=0)
     .background_gradient(cmap=TotalCmap, subset=config.TOTAL_AVG_COLUMNS, axis=0)
+    .background_gradient(cmap=RAWCmap, subset=config.RAW_COLUMNS, axis=0)
 )
 
 st.dataframe(df, width="stretch")

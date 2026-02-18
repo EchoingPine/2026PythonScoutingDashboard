@@ -81,6 +81,13 @@ TELEOP_SCORES = {
 }
 
 # ============================================================================
+# RAW SCORE SETTINGS (Exponential Moving Average)
+# ============================================================================
+
+# K value for RAW calculation: RAW_new = RAW_old + K * (actual - RAW_old)
+RAW_K = 0.4
+
+# ============================================================================
 # COLUMN CONFIGURATIONS
 # ============================================================================
 
@@ -113,12 +120,26 @@ CALCULATED_METRICS = {
 # Order of columns in the Calcs table
 CALCS_COLUMN_ORDER = [
     'Team Number', 
+    'ACE',
+    'ACE Rank',
     'Auto Score AVG', 
     'Teleop Score AVG', 
     'Climb Score AVG', 
     'Total Score AVG', 
+    'Score Rank',
     'Total Score STDEV', 
-    'Consistency'
+    'Consistency',
+    'Auto RAW',
+    'Teleop RAW',
+    'Endgame RAW',
+    'Total RAW',
+    'RAW Rank',
+    'Dominance AVG',
+    'Confidence',
+    'Confidence Rank',
+    'Event Key',
+    'Event Name',
+    'Competition Week'
 ]
 
 # Columns to apply background gradient coloring for each scoring phase
@@ -126,13 +147,30 @@ AUTO_AVG_COLUMNS = ['Auto Score AVG']
 TELEOP_AVG_COLUMNS = ['Teleop Score AVG']
 ENDGAME_AVG_COLUMNS = ['Climb Score AVG']
 TOTAL_AVG_COLUMNS = ['Total Score AVG', 'Total Score STDEV', 'Consistency']
-SCORING_AVG_COLUMNS = ['Auto Score AVG', 'Teleop Score AVG', 'Climb Score AVG', 'Total Score AVG', 'Total Score STDEV', 'Consistency']
+RAW_COLUMNS = ['Auto RAW', 'Teleop RAW', 'Endgame RAW', 'Total RAW', 'Dominance AVG', 'Confidence', 'ACE']
+SCORING_AVG_COLUMNS = [
+    'ACE',
+    'Auto Score AVG', 
+    'Teleop Score AVG', 
+    'Climb Score AVG', 
+    'Total Score AVG', 
+    'Total Score STDEV', 
+    'Consistency',
+    'Auto RAW',
+    'Teleop RAW',
+    'Endgame RAW',
+    'Total RAW',
+    'Dominance AVG',
+    'Confidence',
+]
 
+RANK_COLUMNS = ['Score Rank', 'RAW Rank', 'ACE Rank', 'Confidence Rank']
 # Color schemes for background gradients in the Averages section
 AUTO_COLORS = ["#252525", "#010014"]
 TELEOP_COLORS = ["#252525", "#301500"]
 ENDGAME_COLORS = ["#252525", "#302d00"]
 TOTAL_COLORS = ["#252525", "#003003"]
+RAW_COLORS = ["#252525", "#1E0030"]
 
 # Alternative pastel set (if you prefer softer colors):
 GRAPH_LINE_COLORS_PASTEL = {
@@ -155,11 +193,15 @@ RADAR_CHART_CONFIG = {
         'Normalized Teleop': 'Teleop Score AVG',
         'Normalized Endgame': 'Climb Score AVG',
         'Normalized Total': 'Total Score AVG',
+        'Normalized RAW': 'Total RAW',
+        'Normalized ACE': 'ACE'
     },
     'labels': {
         'Normalized Auto': 'Auto Score',
         'Normalized Teleop': 'Teleop Score',
         'Normalized Endgame': 'Climb Score',
         'Normalized Total': 'Total Score',
+        'Normalized RAW': 'RAW',
+        'Normalized ACE': 'ACE'
     }
 }

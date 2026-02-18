@@ -13,6 +13,22 @@ def write_to_db(dataframe, table_name):
     conn = sqlite3.connect("Scouting_Data.db")
     cursor = conn.cursor()
 
+    # Check if table exists and handle schema changes
+    cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+    table_exists = cursor.fetchone() is not None
+    
+    if table_exists:
+        # Get existing columns
+        cursor.execute(f'PRAGMA table_info("{table_name}")')
+        existing_cols = {row[1] for row in cursor.fetchall()}
+        new_cols = set(dataframe.columns)
+        
+        # Add missing columns
+        missing_cols = new_cols - existing_cols
+        for col in missing_cols:
+            cursor.execute(f'ALTER TABLE "{table_name}" ADD COLUMN "{col}" REAL')
+        conn.commit()
+
     if 'Event Key' in dataframe.columns:
         dataframe = dataframe.drop_duplicates()
 
@@ -99,6 +115,112 @@ def perform_calculations():
         df['Team Match Number'] = df.groupby('Team Number').cumcount() + 1
 
         # ========================================================================
+        # RAW SCORE CALCULATIONS (Exponential Moving Average)
+        # ========================================================================
+
+        # Calculate rolling RAW scores for each team
+        df['Auto RAW'] = 0.0
+        df['Teleop RAW'] = 0.0
+        df['Endgame RAW'] = 0.0
+        df['Total RAW'] = 0.0
+
+        for team_num in df['Team Number'].unique():
+            team_matches = df[df['Team Number'] == team_num].index
+            
+            auto_raw = 0.0
+            teleop_raw = 0.0
+            endgame_raw = 0.0
+            
+            for idx in team_matches:
+                actual_auto = df.loc[idx, 'Auto Score']
+                actual_teleop = df.loc[idx, 'Teleop Score']
+                actual_endgame = df.loc[idx, 'Endgame Score']
+                
+                # Apply EMA formula: RAW_new = RAW_old + K * (actual - RAW_old)
+                auto_raw = auto_raw + config.RAW_K * (actual_auto - auto_raw)
+                teleop_raw = teleop_raw + config.RAW_K * (actual_teleop - teleop_raw)
+                endgame_raw = endgame_raw + config.RAW_K * (actual_endgame - endgame_raw)
+                
+                df.loc[idx, 'Auto RAW'] = auto_raw
+                df.loc[idx, 'Teleop RAW'] = teleop_raw
+                df.loc[idx, 'Endgame RAW'] = endgame_raw
+                df.loc[idx, 'Total RAW'] = auto_raw + teleop_raw + endgame_raw
+
+        # ========================================================================
+        # DOMINANCE CALCULATION
+        # ========================================================================
+
+        df['Dominance'] = None
+        
+        if not tba_df.empty and 'match_number' in tba_df.columns:
+            # Parse TBA data for match scores
+            tba_match_data = []
+            for _, tba_row in tba_df.iterrows():
+                if tba_row.get('comp_level') != 'qm':
+                    continue
+                    
+                match_num = tba_row.get('match_number')
+                
+                # Parse team keys and scores
+                try:
+                    blue_teams = tba_row.get('alliances.blue.team_keys', [])
+                    red_teams = tba_row.get('alliances.red.team_keys', [])
+                    blue_score = tba_row.get('alliances.blue.score', 0)
+                    red_score = tba_row.get('alliances.red.score', 0)
+                    
+                    # Handle JSON-serialized data
+                    if isinstance(blue_teams, str):
+                        blue_teams = json.loads(blue_teams)
+                    if isinstance(red_teams, str):
+                        red_teams = json.loads(red_teams)
+                    
+                    # Extract team numbers from "frcXXXX" format
+                    blue_team_nums = [int(t.replace('frc', '')) for t in blue_teams if isinstance(t, str) and t.startswith('frc')]
+                    red_team_nums = [int(t.replace('frc', '')) for t in red_teams if isinstance(t, str) and t.startswith('frc')]
+                    
+                    # Add match data for each team
+                    for team_num in blue_team_nums:
+                        tba_match_data.append({
+                            'Match Number': match_num,
+                            'Team Number': team_num,
+                            'Alliance': 'blue',
+                            'Opponent Score': red_score,
+                            'Team Count': len(red_team_nums) if red_team_nums else 3
+                        })
+                    for team_num in red_team_nums:
+                        tba_match_data.append({
+                            'Match Number': match_num,
+                            'Team Number': team_num,
+                            'Alliance': 'red',
+                            'Opponent Score': blue_score,
+                            'Team Count': len(blue_team_nums) if blue_team_nums else 3
+                        })
+                except Exception as e:
+                    continue
+            
+            if tba_match_data:
+                tba_match_df = pd.DataFrame(tba_match_data)
+                
+                # Merge with scouting data
+                df = df.merge(
+                    tba_match_df[['Match Number', 'Team Number', 'Opponent Score', 'Team Count']],
+                    on=['Match Number', 'Team Number'],
+                    how='left'
+                )
+                
+                # Calculate dominance for matches with TBA data
+                eps = 1e-6
+                mask = df['Opponent Score'].notna()
+                
+                df.loc[mask, 'margin'] = df.loc[mask, 'Total Score'] - (df.loc[mask, 'Opponent Score'] / df.loc[mask, 'Team Count'])
+                df.loc[mask, 'scaled_margin'] = df.loc[mask, 'margin'] / (df.loc[mask, 'Opponent Score'] + eps)
+                df.loc[mask, 'norm_margin'] = (df.loc[mask, 'scaled_margin'] + 1) / 1.3
+                df.loc[mask, 'Dominance'] = df.loc[mask, 'norm_margin'].clip(0.0, 1.0)
+                
+                # Clean up temporary columns
+                df.drop(columns=['margin', 'scaled_margin', 'norm_margin', 'Opponent Score', 'Team Count'], inplace=True, errors='ignore')
+
+        # ========================================================================
         # METRICS CALCULATION
         # ========================================================================
 
@@ -122,6 +244,17 @@ def perform_calculations():
             .merge(team_counts, on='Team Number')
         )
 
+        # Extract final RAW values for each team (from their last match)
+        final_raw = df.loc[df.groupby('Team Number')['Team Match Number'].idxmax(), 
+                           ['Team Number', 'Auto RAW', 'Teleop RAW', 'Endgame RAW', 'Total RAW']]
+        calc_df = calc_df.merge(final_raw, on='Team Number', how='left')
+
+        # Calculate mean Dominance for each team
+        df['Dominance'] = pd.to_numeric(df['Dominance'], errors='coerce')
+        dominance_avg = df.groupby('Team Number', as_index=False)['Dominance'].mean()
+        dominance_avg.rename(columns={'Dominance': 'Dominance AVG'}, inplace=True)
+        calc_df = calc_df.merge(dominance_avg, on='Team Number', how='left')
+
         # ========================================================================
         # CONSISTENCY METRIC
         # ========================================================================
@@ -135,7 +268,29 @@ def perform_calculations():
                 1.0 - (calc_df['Total Score STDEV'] / (peak + eps))
         ).clip(lower=0.0, upper=1.0)  # Clamp between 0 and 1
 
-        # Reorder columns according to config
+        # Calculate Confidence and ACE
+        calc_df['Confidence'] = calc_df['Consistency'] * 0.5 + calc_df['Dominance AVG'].fillna(0) * 0.5
+        calc_df['ACE'] = calc_df['Total RAW'] * calc_df['Confidence']
+
+        # Add Event Key and Event Name before reordering
+        event_key = config.EVENTS[competition]['Event Key']
+        event_name = config.EVENTS[competition]['Name']
+        competition_week = config.EVENTS[competition]['Competition Week']
+        
+        calc_df['Event Key'] = event_key
+        calc_df['Event Name'] = event_name
+        calc_df['Competition Week'] = competition_week
+
+        # Round calculated metrics to 2 decimal places
+        calc_df = calc_df.round(2)
+
+        # Calculate rankings (higher score = lower rank number, so use ascending=False)
+        calc_df['ACE Rank'] = calc_df['ACE'].rank(method='min', ascending=False).astype(int)
+        calc_df['RAW Rank'] = calc_df['Total RAW'].rank(method='min', ascending=False).astype(int)
+        calc_df['Confidence Rank'] = calc_df['Confidence'].rank(method='min', ascending=False).astype(int)
+        calc_df['Score Rank'] = calc_df['Total Score AVG'].rank(method='min', ascending=False).astype(int)
+
+        # Reorder columns according to config (now rankings are included)
         calc_df = calc_df[config.CALCS_COLUMN_ORDER]
 
         # ========================================================================
@@ -155,20 +310,10 @@ def perform_calculations():
         
         norm_df = pd.DataFrame(norm_data)
 
-        # Round calculated metrics to 2 decimal places
-        calc_df = calc_df.round(2)
-
-        # Add Event Key and Event Name to all dataframes efficiently
-        event_key = config.EVENTS[competition]['Event Key']
-        event_name = config.EVENTS[competition]['Name']
-        competition_week = config.EVENTS[competition]['Competition Week']
-        
+        # Add Event Key and Event Name to norm_df and df
         norm_df['Event Key'] = event_key
         norm_df['Event Name'] = event_name
         norm_df['Competition Week'] = competition_week
-        calc_df['Event Key'] = event_key
-        calc_df['Event Name'] = event_name
-        calc_df['Competition Week'] = competition_week
         df['Event Key'] = event_key
         df['Event Name'] = event_name
         df['Competition Week'] = competition_week
@@ -209,6 +354,37 @@ def perform_calculations():
     )
     all_df = all_df.sort_values(['Team Number', 'Competition Week', 'Match Number'])
     all_df['Team Match Number'] = all_df.groupby('Team Number').cumcount() + 1
+
+    # ========================================================================
+    # RAW SCORE CALCULATIONS FOR ALL COMPETITIONS
+    # ========================================================================
+
+    all_df['Auto RAW'] = 0.0
+    all_df['Teleop RAW'] = 0.0
+    all_df['Endgame RAW'] = 0.0
+    all_df['Total RAW'] = 0.0
+
+    for team_num in all_df['Team Number'].unique():
+        team_matches = all_df[all_df['Team Number'] == team_num].index
+        
+        auto_raw = 0.0
+        teleop_raw = 0.0
+        endgame_raw = 0.0
+        
+        for idx in team_matches:
+            actual_auto = all_df.loc[idx, 'Auto Score']
+            actual_teleop = all_df.loc[idx, 'Teleop Score']
+            actual_endgame = all_df.loc[idx, 'Endgame Score']
+            
+            # Apply EMA formula: RAW_new = RAW_old + K * (actual - RAW_old)
+            auto_raw = auto_raw + config.RAW_K * (actual_auto - auto_raw)
+            teleop_raw = teleop_raw + config.RAW_K * (actual_teleop - teleop_raw)
+            endgame_raw = endgame_raw + config.RAW_K * (actual_endgame - endgame_raw)
+            
+            all_df.loc[idx, 'Auto RAW'] = auto_raw
+            all_df.loc[idx, 'Teleop RAW'] = teleop_raw
+            all_df.loc[idx, 'Endgame RAW'] = endgame_raw
+            all_df.loc[idx, 'Total RAW'] = auto_raw + teleop_raw + endgame_raw
     
     all_calc_df = pd.DataFrame()
     all_calc_df['Team Number'] = all_df['Team Number'].unique()
@@ -229,6 +405,19 @@ def perform_calculations():
         .merge(all_team_counts, on='Team Number')
     )
 
+    # Extract final RAW values for each team (from their last match)
+    all_final_raw = all_df.loc[all_df.groupby('Team Number')['Team Match Number'].idxmax(), 
+                               ['Team Number', 'Auto RAW', 'Teleop RAW', 'Endgame RAW', 'Total RAW']]
+    all_calc_df = all_calc_df.merge(all_final_raw, on='Team Number', how='left')
+
+    # Calculate mean Dominance for each team (if column exists)
+    if 'Dominance' in all_df.columns:
+        # Convert Dominance to numeric, handling any non-numeric values
+        all_df['Dominance'] = pd.to_numeric(all_df['Dominance'], errors='coerce')
+        all_dominance_avg = all_df.groupby('Team Number', as_index=False)['Dominance'].mean()
+        all_dominance_avg.rename(columns={'Dominance': 'Dominance AVG'}, inplace=True)
+        all_calc_df = all_calc_df.merge(all_dominance_avg, on='Team Number', how='left')
+
     eps = 1e-6  # Small value to prevent division by zero
     all_peak = all_df['Total Score'].max()
 
@@ -236,10 +425,26 @@ def perform_calculations():
             1.0 - (all_calc_df['Total Score STDEV'] / (all_peak + eps))
     ).clip(lower=0.0, upper=1.0)  # Clamp between 0 and 1
 
-    # Reorder columns according to config
-    all_calc_df = all_calc_df[config.CALCS_COLUMN_ORDER]
+    # Calculate Confidence and ACE for all competitions
+    all_calc_df['Confidence'] = all_calc_df['Consistency'] * 0.5 + all_calc_df['Dominance AVG'].fillna(0) * 0.5
+    all_calc_df['ACE'] = all_calc_df['Total RAW'] * all_calc_df['Confidence']
 
+    # Add Event Key and Event Name before reordering
+    all_calc_df['Event Key'] = "All Competitions"
+    all_calc_df['Event Name'] = "All Competitions"
+    all_calc_df['Competition Week'] = "All Weeks"
+
+    # Round calculated metrics to 2 decimal places
     all_calc_df = all_calc_df.round(2)
+
+    # Calculate rankings for all competitions
+    all_calc_df['ACE Rank'] = all_calc_df['ACE'].rank(method='min', ascending=False).astype(int)
+    all_calc_df['RAW Rank'] = all_calc_df['Total RAW'].rank(method='min', ascending=False).astype(int)
+    all_calc_df['Confidence Rank'] = all_calc_df['Confidence'].rank(method='min', ascending=False).astype(int)
+    all_calc_df['Score Rank'] = all_calc_df['Total Score AVG'].rank(method='min', ascending=False).astype(int)
+
+    # Reorder columns according to config (now rankings are included)
+    all_calc_df = all_calc_df[config.CALCS_COLUMN_ORDER]
 
     all_norm_data = {'Team Number': all_calc_df['Team Number']}
         
@@ -256,12 +461,10 @@ def perform_calculations():
     # Round calculated metrics to 2 decimal places
     all_norm_df = all_norm_df.round(2)
 
+    # Add Event Key and Event Name to other dataframes
     all_norm_df['Event Key'] = "All Competitions"
     all_norm_df['Event Name'] = "All Competitions"
     all_norm_df['Competition Week'] = "All Weeks"
-    all_calc_df['Event Key'] = "All Competitions"
-    all_calc_df['Event Name'] = "All Competitions"
-    all_calc_df['Competition Week'] = "All Weeks"
     all_df['Event Key'] = "All Competitions"
     all_df['Event Name'] = "All Competitions"
     all_df['Competition Week'] = "All Weeks"

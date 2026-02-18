@@ -3,6 +3,7 @@ import streamlit as st
 import plotly.graph_objects as go
 import competition_config as config
 
+
 # Initialize database connection
 def get_connection():
     return sqlite3.connect("Scouting_Data.db")
@@ -93,7 +94,7 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
         legend=dict(groupclick="toggleitem"),
         xaxis_title="Match Number",
         yaxis_title="Score",
-        yaxis=dict(range=[0, 150]),
+        yaxis=dict(range=[0, 175]),
         margin=dict(l=0, r=0, t=25, b=0),
         font_color="#F4B40B"
     )
@@ -161,6 +162,12 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
         # Ensure pit data column names are strings for serialization
         pit_data.columns = pit_data.columns.astype(str)
 
+        team_avgs = sql_to_df(
+            f'SELECT {", ".join([f"`{col}`" for col in config.RANK_COLUMNS])} FROM "Calcs" WHERE `Team Number` = {team_number} AND `Event Name` = "{st.session_state.comp}"',
+            conn)
+        
+        team_avgs.drop(columns=['Event Key'], inplace=True, errors='ignore')
+
         # Display phase breakdowns
         st.markdown(":material/clock_loader_10: **Auto**")
         st.dataframe(auto_data)
@@ -168,6 +175,8 @@ def plot_team_scores(team_number, show_table=False, dataType=""):
         st.dataframe(teleop_data)
         st.markdown(":material/stop_circle: **Endgame**")
         st.dataframe(endgame_data)
+        st.markdown(":material/score: **Ranks**")
+        st.dataframe(team_avgs.transpose())
         st.markdown(":material/partner_exchange: **Pit Data**")
         st.dataframe(pit_data)
     

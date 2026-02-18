@@ -15,5 +15,6 @@ except ValueError:
     st.error("Please enter a valid integer team number.")
     st.stop()
 
+
 # Display team scores
 utils.plot_team_scores(teamNumber, show_table=True, dataType="single team")

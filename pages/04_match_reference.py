@@ -78,19 +78,18 @@ if teams_df.empty:
     st.error("Match data is missing team keys.")
     st.stop()
 
-# Get average scores for all teams
-avg_columns = ["Team Number"] + config.SCORING_AVG_COLUMNS
-something = ", ".join([f'"{col}"' for col in avg_columns])
-avg_scores_df = pd.read_sql(
-    f'SELECT {something} FROM "Calcs" WHERE "Event Name" = ?',
+# Fetch scores for all teams in this match
+placeholders = ','.join(['?' for _ in teams_df["Team Number"]])
+match_score_df = pd.read_sql(
+    f'SELECT "Team Number", "Total Score", "Auto Score", "Teleop Score", "Endgame Score" FROM "Scouting_Data" WHERE "Team Number" IN ({placeholders}) AND "Match Number" = ? AND "Event Name" = ?',
     conn,
-    params=(st.session_state.comp,)
+    params=list(teams_df["Team Number"]) + [matchNumber, st.session_state.comp]
 )
 
 # Merge match lineup with average scores
 result_df = (
     teams_df
-    .merge(avg_scores_df, on="Team Number", how="left")
+    .merge(match_score_df, on="Team Number", how="left")
 )
 
 result_df["Team Number"] = result_df["Team Number"].astype(str)
@@ -100,7 +99,17 @@ result_df["Slot"] = result_df["Position"].str[-1]
 result_df.sort_values(by=["Alliance"], inplace=True)
 result_df.drop(columns=["Alliance", "Slot"], inplace=True)
 
-result_df = result_df.style.apply(utils.color_alliance, axis=1).format("{:.2f}", subset=config.SCORING_AVG_COLUMNS).set_properties(subset=["Team Number"], **{"font-weight": "bold"})
+scouting_blue_score = result_df[result_df["Position"].str.contains("BLUE")][["Auto Score", "Teleop Score", "Endgame Score"]].sum().sum()
+scouting_red_score = result_df[result_df["Position"].str.contains("RED")][["Auto Score", "Teleop Score", "Endgame Score"]].sum().sum()
+
+result_df = result_df.style.apply(utils.color_alliance, axis=1).set_properties(subset=["Team Number"], **{"font-weight": "bold"})
+
+
+match_df = pd.read_sql(
+    'SELECT "alliances.blue.score" AS blue_score, "alliances.red.score" AS red_score FROM "TBA Data" WHERE "match_number" = ? AND "comp_level" = "qm" AND "Event Name" = ?',
+    conn,
+    params=(matchNumber, st.session_state.comp)
+)
 
 header = f"Match {matchNumber}"
 
@@ -108,6 +117,16 @@ st.header(header)
 
 st.subheader(":material/poker_chip: Team Lineup & Averages")
 st.dataframe(result_df, width="stretch")
+
+st.subheader(":material/scoreboard: Match Scores")
+st.markdown("##### As Given by TBA")
+if not match_df.empty:
+    tba_blue_score = match_df.iloc[0]["blue_score"]
+    tba_red_score = match_df.iloc[0]["red_score"]
+    st.markdown(f"**Red Alliance:** {tba_red_score}  |  **Blue Alliance:** {tba_blue_score}")
+st.markdown("##### Calculated from Scouting Data")
+if not match_df.empty:
+    st.markdown(f"**Red Alliance:** {scouting_red_score}  |  **Blue Alliance:** {scouting_blue_score}")
 
 # Display video if available
 st.subheader(":material/youtube_activity: Video")
